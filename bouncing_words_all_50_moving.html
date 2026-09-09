@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOUNCING WORDS - Drilling Vocabulary</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh;
+  font-family:"Trebuchet MS","Arial Rounded MT Bold",Arial,sans-serif;
+  color:#26345d;
+  background:
+    radial-gradient(circle at 8% 8%,#ffe1ef 0 7%,transparent 8%),
+    radial-gradient(circle at 92% 12%,#dff7ff 0 7%,transparent 8%),
+    linear-gradient(135deg,#fff8f0,#eef8ff 48%,#f8edff);
+}
+button{font-family:inherit}
+.brand{
+  background:linear-gradient(90deg,#ff5c9a,#9b5de5,#2aa9e8,#45b97c);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.card{
+  background:rgba(255,255,255,.86);
+  border:3px solid rgba(255,255,255,.95);
+  box-shadow:0 16px 40px rgba(75,73,130,.14);
+  backdrop-filter:blur(10px);
+}
+.stage-btn,.nav-btn{transition:transform .18s ease,box-shadow .18s ease}
+.stage-btn:hover,.nav-btn:hover:not(:disabled){transform:translateY(-3px)}
+.stage-btn:active,.nav-btn:active:not(:disabled){transform:translateY(1px)}
+.nav-btn:disabled{opacity:.38;cursor:not-allowed}
+.hidden-screen{display:none!important}
+
+.arena{
+  position:relative;
+  overflow:hidden;
+  height:min(68vh,590px);
+  min-height:470px;
+  border-radius:30px;
+  border:4px solid #fff;
+  background:
+    radial-gradient(circle at 15% 17%,rgba(255,255,255,.88) 0 20px,transparent 21px),
+    radial-gradient(circle at 82% 20%,rgba(255,255,255,.82) 0 27px,transparent 28px),
+    linear-gradient(#bdefff 0%,#eafaff 71%,#aee88b 71%,#83d35e 100%);
+  box-shadow:inset 0 0 0 2px rgba(95,160,220,.16),0 14px 35px rgba(54,104,155,.16);
+}
+.arena:before,.arena:after{
+  content:"";position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.7);z-index:0;
+}
+.arena:before{
+  width:125px;height:40px;top:65px;left:-18px;
+  box-shadow:32px -18px 0 2px rgba(255,255,255,.72),65px 2px 0 rgba(255,255,255,.72);
+}
+.arena:after{
+  width:120px;height:40px;top:95px;right:-18px;
+  box-shadow:-35px -20px 0 rgba(255,255,255,.7),-68px 3px 0 rgba(255,255,255,.7);
+}
+#bubbleLayer{position:absolute;inset:0;z-index:3}
+.bubble{
+  position:absolute;
+  display:flex;align-items:center;justify-content:center;
+  padding:7px 10px;
+  min-width:58px;max-width:145px;min-height:38px;
+  border-radius:999px;
+  border:2px solid rgba(255,255,255,.95);
+  color:#26345d;
+  font-weight:900;
+  font-size:clamp(10px,1.15vw,15px);
+  text-align:center;line-height:1.05;
+  box-shadow:0 6px 12px rgba(67,79,140,.2),inset 0 3px 7px rgba(255,255,255,.45);
+  user-select:none;
+  will-change:transform;
+  white-space:normal;
+}
+.b1{background:#ff8fb7}.b2{background:#ffd05a}.b3{background:#66c7f2}
+.b4{background:#a98bea}.b5{background:#8ddd71}.b6{background:#ff9f5f}
+.b7{background:#f6a6e4}.b8{background:#8ed9d0}
+
+.bubble::after{
+  content:"";position:absolute;width:15px;height:6px;border-radius:50%;
+  background:rgba(50,60,110,.15);bottom:-9px;left:50%;
+  transform:translateX(-50%);filter:blur(2px);
+}
+.countdown{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  z-index:20;background:rgba(255,255,255,.18);backdrop-filter:blur(3px);
+}
+.count-number{
+  width:145px;height:145px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:88px;font-weight:1000;color:#fff;
+  background:linear-gradient(135deg,#ff5c9a,#845de5);
+  border:7px solid #fff;box-shadow:0 18px 40px rgba(76,55,145,.3);
+  animation:pop .75s ease both;
+}
+@keyframes pop{
+  0%{transform:scale(.35);opacity:0}
+  65%{transform:scale(1.12);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+.spark{
+  position:absolute;font-size:25px;opacity:.75;z-index:1;
+  animation:spin 5s linear infinite;pointer-events:none;
+}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.progress-track{background:rgba(70,85,150,.12)}
+.progress-fill{transition:width .35s ease}
+
+@media(max-width:700px){
+  .arena{height:68vh;min-height:500px}
+  .bubble{min-width:48px;max-width:105px;min-height:32px;padding:5px 7px;font-size:9px}
+  .count-number{width:115px;height:115px;font-size:70px}
+}
+</style>
+</head>
+
+<body>
+<div class="max-w-6xl mx-auto px-4 py-5 md:py-8">
+
+<header class="text-center mb-6">
+  <div class="text-5xl md:text-7xl font-black tracking-tight brand">BOUNCING WORDS</div>
+  <div class="inline-block mt-1 px-5 py-1 rounded-full bg-yellow-300 text-indigo-900 font-black text-lg md:text-2xl shadow">
+    (DRILLING VOCABULARY)
+  </div>
+  <div class="mt-3 inline-block px-5 py-2 rounded-full bg-pink-200 text-pink-900 font-bold">
+    Created by Miss EILEEEN ♥
+  </div>
+</header>
+
+<section id="homeScreen">
+  <div class="grid md:grid-cols-2 gap-5">
+    <div class="card rounded-[30px] p-6 md:p-8 text-center border-pink-300">
+      <div class="text-5xl mb-3">📚</div>
+      <div class="text-pink-600 font-black text-xl">STAGE 1</div>
+      <h2 class="text-3xl md:text-4xl font-black text-indigo-900 mt-1">VOCABULARY</h2>
+      <p class="font-bold text-slate-500 mt-1">50 English words — all moving together!</p>
+      <button onclick="openStage(1)" class="stage-btn mt-6 w-full max-w-xs mx-auto block rounded-full px-8 py-4 bg-pink-500 hover:bg-pink-600 text-white text-xl font-black shadow-lg">
+        ▶ START
+      </button>
+    </div>
+
+    <div class="card rounded-[30px] p-6 md:p-8 text-center border-sky-300">
+      <div class="text-5xl mb-3">💡</div>
+      <div class="text-sky-600 font-black text-xl">STAGE 2</div>
+      <h2 class="text-3xl md:text-4xl font-black text-indigo-900 mt-1">MEANING</h2>
+      <p class="font-bold text-slate-500 mt-1">50 Indonesian meanings — all moving together!</p>
+      <button onclick="openStage(2)" class="stage-btn mt-6 w-full max-w-xs mx-auto block rounded-full px-8 py-4 bg-sky-500 hover:bg-sky-600 text-white text-xl font-black shadow-lg">
+        ▶ START
+      </button>
+    </div>
+  </div>
+
+  <div class="card rounded-[24px] p-4 mt-5 text-center">
+    <p class="font-bold text-slate-600">
+      🎯 <span class="text-pink-600">How to play:</span>
+      Choose a stage → 3, 2, 1 → all 50 bubbles start bouncing!
+    </p>
+  </div>
+</section>
+
+<section id="gameScreen" class="hidden-screen">
+  <div class="flex flex-col md:flex-row gap-3 items-center justify-between mb-4">
+    <button onclick="goHome()" class="nav-btn rounded-full bg-white px-5 py-3 font-black text-indigo-700 shadow">← Home</button>
+    <div class="text-center">
+      <div id="stageLabel" class="text-2xl md:text-3xl font-black text-indigo-900"></div>
+      <div class="text-sm font-bold text-slate-500">ALL 50 WORDS MOVE TOGETHER</div>
+    </div>
+    <div class="rounded-full bg-white px-5 py-3 font-black text-indigo-700 shadow">50 / 50</div>
+  </div>
+
+  <div class="card rounded-full p-1 mb-4">
+    <div class="progress-track h-3 rounded-full overflow-hidden">
+      <div id="progress" class="progress-fill h-full rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-sky-500" style="width:100%"></div>
+    </div>
+  </div>
+
+  <div id="arena" class="arena">
+    <div class="spark" style="top:17px;left:25px">⭐</div>
+    <div class="spark" style="top:28px;right:30px;animation-delay:1s">✨</div>
+    <div class="spark" style="bottom:80px;left:40px;animation-delay:2s">🌼</div>
+    <div class="spark" style="bottom:75px;right:42px;animation-delay:3s">🌸</div>
+
+    <div id="bubbleLayer"></div>
+
+    <div id="countdown" class="countdown hidden-screen">
+      <div id="countNumber" class="count-number">3</div>
+    </div>
+
+    <div class="absolute bottom-4 left-0 right-0 text-center z-10 pointer-events-none">
+      <span class="inline-block px-4 py-2 rounded-full bg-white/80 text-indigo-700 font-black shadow">
+        💨 Watch all 50 words bounce!
+      </span>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between gap-3 mt-5">
+    <button id="prevBtn" onclick="previousStage()" class="nav-btn rounded-full px-6 py-4 bg-white text-purple-700 font-black text-lg shadow-lg">
+      ← Previous
+    </button>
+
+    <button onclick="restartStage()" class="nav-btn rounded-full px-5 py-3 bg-yellow-300 text-yellow-900 font-black shadow">
+      🔄 Restart
+    </button>
+
+    <button id="nextBtn" onclick="nextStage()" class="nav-btn rounded-full px-6 py-4 bg-pink-500 hover:bg-pink-600 text-white font-black text-lg shadow-lg">
+      Next →
+    </button>
+  </div>
+
+  <p id="status" class="text-center mt-3 font-bold text-slate-500"></p>
+</section>
+</div>
+
+<script>
+const vocabulary=[
+"determine","assume","crucial","challenge","indicate","obtain","lead to","result in","trigger","alter",
+"evolve","expand","emerge","shift","adapt","adjust","advance","sustain","preserve","oppose",
+"justify","convince","estimate","reveal","biodiversity","preserve","climate","extinct","society","significant",
+"require","whereas","deforestation","waste","notable","inherent","plausible","feasible","explicit","derive",
+"mitigate","yield","foster","surge","decline","diminish","contract","persisted","regulation","compel"
+];
+
+const meanings=[
+"menentukan",
+"berasumsi",
+"sangat penting",
+"tantangan",
+"menunjukkan",
+"memperoleh",
+"menyebabkan",
+"mengakibatkan",
+"memicu",
+"mengubah",
+"berevolusi",
+"memperluas",
+"muncul",
+"perubahan",
+"beradaptasi",
+"menyesuaikan",
+"berkembang",
+"mempertahankan",
+"melestarikan",
+"menentang",
+"memberikan alasan",
+"meyakinkan",
+"memperkirakan",
+"mengungkapkan",
+"keanekaragaman hayati",
+"melestarikan",
+"iklim",
+"punah",
+"masyarakat",
+"penting",
+"memerlukan",
+"sedangkan",
+"penggundulan hutan",
+"limbah",
+"patut diperhatikan",
+"melekat",
+"masuk akal",
+"layak",
+"tersurat",
+"memperoleh",
+"mengurangi",
+"menghasilkan",
+"mendorong",
+"melonjak",
+"menurun",
+"berkurang",
+"menyusut",
+"tetap berlangsung",
+"peraturan",
+"memaksa",
+];
+
+let stage=1;
+let animationFrame=null;
+let countdownTimer=null;
+let running=false;
+let bubbles=[];
+let lastTime=0;
+
+const homeScreen=document.getElementById("homeScreen");
+const gameScreen=document.getElementById("gameScreen");
+const arena=document.getElementById("arena");
+const layer=document.getElementById("bubbleLayer");
+const countdown=document.getElementById("countdown");
+const countNumber=document.getElementById("countNumber");
+const stageLabel=document.getElementById("stageLabel");
+const statusEl=document.getElementById("status");
+const prevBtn=document.getElementById("prevBtn");
+const nextBtn=document.getElementById("nextBtn");
+
+function getItems(){return stage===1?vocabulary:meanings}
+
+function openStage(s){
+  stage=s;
+  homeScreen.classList.add("hidden-screen");
+  gameScreen.classList.remove("hidden-screen");
+  setupStage();
+}
+
+function goHome(){
+  stopAnimation();
+  clearInterval(countdownTimer);
+  countdown.classList.add("hidden-screen");
+  gameScreen.classList.add("hidden-screen");
+  homeScreen.classList.remove("hidden-screen");
+}
+
+function setupStage(){
+  stopAnimation();
+  clearInterval(countdownTimer);
+  layer.innerHTML="";
+  bubbles=[];
+
+  stageLabel.textContent=stage===1?"STAGE 1 • VOCABULARY":"STAGE 2 • MEANING";
+  statusEl.textContent=stage===1
+    ?"Find and notice the English vocabulary!"
+    :"Find and notice the Indonesian meanings!";
+
+  prevBtn.disabled=stage===1;
+  nextBtn.textContent=stage===2?"Finish ✓":"Next →";
+  createBubbles();
+  startCountdown();
+}
+
+function createBubbles(){
+  const items=getItems();
+  const rect=arena.getBoundingClientRect();
+  const colors=["b1","b2","b3","b4","b5","b6","b7","b8"];
+
+  items.forEach((text,i)=>{
+    const el=document.createElement("div");
+    el.className="bubble "+colors[i%colors.length];
+    el.textContent=text;
+    layer.appendChild(el);
+
+    const w=el.offsetWidth||90;
+    const h=el.offsetHeight||42;
+    const maxX=Math.max(10,rect.width-w-10);
+    const maxY=Math.max(135,rect.height-h-45);
+
+    // Grid-like initial distribution prevents the 50 bubbles from stacking.
+    const cols=10;
+    const row=Math.floor(i/cols);
+    const col=i%cols;
+    const cellW=Math.max(1,(rect.width-20)/cols);
+    const cellH=Math.max(1,(maxY-125)/5);
+    let px=10+col*cellW+(Math.random()*22-11);
+    let py=125+row*cellH+(Math.random()*25-12);
+
+    px=Math.max(8,Math.min(maxX,px));
+    py=Math.max(120,Math.min(maxY,py));
+
+    bubbles.push({
+      el,x:px,y:py,w,h,
+      vx:(Math.random()>.5?1:-1)*(35+Math.random()*65),
+      vy:(Math.random()>.5?1:-1)*(30+Math.random()*60),
+      r:Math.max(w,h)*.46
+    });
+  });
+
+  renderAll();
+}
+
+function renderAll(){
+  bubbles.forEach(b=>{
+    b.el.style.transform=`translate3d(${b.x}px,${b.y}px,0)`;
+  });
+}
+
+function startCountdown(){
+  countdown.classList.remove("hidden-screen");
+  let n=3;
+  showCount(n);
+  countdownTimer=setInterval(()=>{
+    n--;
+    if(n>0) showCount(n);
+    else{
+      clearInterval(countdownTimer);
+      countdown.classList.add("hidden-screen");
+      startAnimation();
+    }
+  },850);
+}
+
+function showCount(n){
+  countNumber.textContent=n;
+  countNumber.style.animation="none";
+  void countNumber.offsetWidth;
+  countNumber.style.animation="pop .75s ease both";
+}
+
+function startAnimation(){
+  running=true;
+  lastTime=performance.now();
+  cancelAnimationFrame(animationFrame);
+  animationFrame=requestAnimationFrame(animate);
+}
+
+function stopAnimation(){
+  running=false;
+  cancelAnimationFrame(animationFrame);
+}
+
+function animate(now){
+  if(!running)return;
+  const dt=Math.min((now-lastTime)/1000,.035);
+  lastTime=now;
+
+  const rect=arena.getBoundingClientRect();
+  const top=115;
+  const bottom=rect.height-43;
+
+  // Move every bubble and keep every bubble inside the arena.
+  bubbles.forEach(b=>{
+    b.x+=b.vx*dt;
+    b.y+=b.vy*dt;
+
+    if(b.x<=6){b.x=6;b.vx=Math.abs(b.vx)}
+    if(b.x+b.w>=rect.width-6){b.x=rect.width-b.w-6;b.vx=-Math.abs(b.vx)}
+    if(b.y<=top){b.y=top;b.vy=Math.abs(b.vy)}
+    if(b.y+b.h>=bottom){b.y=bottom-b.h;b.vy=-Math.abs(b.vy)}
+  });
+
+  // Gentle collision response so bubbles visibly interact with each other.
+  for(let i=0;i<bubbles.length;i++){
+    for(let j=i+1;j<bubbles.length;j++){
+      const a=bubbles[i],b=bubbles[j];
+      const ax=a.x+a.w/2, ay=a.y+a.h/2;
+      const bx=b.x+b.w/2, by=b.y+b.h/2;
+      const dx=bx-ax,dy=by-ay;
+      const minDist=a.r*.58+b.r*.58;
+      const dist=Math.sqrt(dx*dx+dy*dy)||.01;
+
+      if(dist<minDist){
+        const nx=dx/dist,ny=dy/dist;
+        const overlap=minDist-dist;
+        a.x-=nx*overlap*.5;a.y-=ny*overlap*.5;
+        b.x+=nx*overlap*.5;b.y+=ny*overlap*.5;
+
+        const relVx=b.vx-a.vx,relVy=b.vy-a.vy;
+        const approaching=relVx*nx+relVy*ny;
+        if(approaching<0){
+          a.vx+=approaching*nx;
+          a.vy+=approaching*ny;
+          b.vx-=approaching*nx;
+          b.vy-=approaching*ny;
+        }
+      }
+    }
+  }
+
+  renderAll();
+  animationFrame=requestAnimationFrame(animate);
+}
+
+function nextStage(){
+  if(stage===1){
+    stage=2;
+    setupStage();
+  }else{
+    stopAnimation();
+    statusEl.textContent="🎉 Amazing! You completed both stages!";
+    nextBtn.disabled=true;
+  }
+}
+
+function previousStage(){
+  if(stage===2){
+    stage=1;
+    setupStage();
+  }
+}
+
+function restartStage(){
+  nextBtn.disabled=false;
+  setupStage();
+}
+
+window.addEventListener("resize",()=>{
+  if(gameScreen.classList.contains("hidden-screen"))return;
+  const rect=arena.getBoundingClientRect();
+  bubbles.forEach(b=>{
+    b.x=Math.min(Math.max(6,b.x),Math.max(6,rect.width-b.w-6));
+    b.y=Math.min(Math.max(115,b.y),Math.max(115,rect.height-b.h-43));
+  });
+  renderAll();
+});
+</script>
+</body>
+</html>
